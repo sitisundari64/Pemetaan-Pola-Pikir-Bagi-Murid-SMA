@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemetaan Profil Pola Pikir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --soil:#FAF6EE;
+    --soil-deep:#F1E9D8;
+    --ink:#2B2418;
+    --ink-soft:#6B6354;
+    --line:#E4DAC4;
+    --seed:#9CA3AF;
+    --sprout:#E9B14C;
+    --sapling:#7AA661;
+    --tree:#2D6A4F;
+    --tree-light:#E8F2EB;
+    --coral:#E0654A;
+    --card:#FFFFFF;
+    --radius:18px;
+    --shadow: 0 1px 2px rgba(43,36,24,.04), 0 8px 24px -10px rgba(43,36,24,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(900px 500px at 100% -10%, #F4ECD8 0%, transparent 60%),
+      var(--soil);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 0;
+  }
+  .display{font-family:'Fredoka', sans-serif;}
+  .wrap{width:100%;max-width:760px;display:flex;flex-direction:column;flex:1;}
+
+  header.app-head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .mark{
+    width:46px;height:46px;border-radius:14px;
+    background:linear-gradient(155deg,var(--tree),var(--sapling));
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;
+    box-shadow:var(--shadow);
+  }
+  .head-text h1{
+    font-family:'Fredoka',sans-serif;
+    font-size:21px;font-weight:600;margin:0 0 2px;letter-spacing:.2px;
+  }
+  .head-text p{margin:0;font-size:13px;color:var(--ink-soft);}
+
+  .progress-row{display:flex;gap:6px;margin-bottom:26px;}
+  .progress-row .seg{
+    flex:1;height:6px;border-radius:4px;background:var(--line);overflow:hidden;
+  }
+  .progress-row .seg i{display:block;height:100%;width:0%;background:var(--tree);transition:width .4s ease;}
+  .progress-row .seg.done i{width:100%;}
+  .progress-row .seg.active i{width:55%;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:28px 26px;
+    margin-bottom:24px;
+  }
+  .step-eyebrow{
+    font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--sapling);margin:0 0 6px;
+  }
+  .step-title{font-family:'Fredoka',sans-serif;font-size:19px;font-weight:600;margin:0 0 18px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;padding:11px 13px;border-radius:11px;border:1.5px solid var(--line);
+    font-family:inherit;font-size:14.5px;background:var(--soil);color:var(--ink);
+    transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus{outline:none;border-color:var(--sapling);}
+  .field-row{display:flex;gap:12px;}
+  .field-row .field{flex:1;}
+
+  .qcount{font-size:13px;color:var(--ink-soft);margin-bottom:18px;}
+  .question{
+    border-top:1px solid var(--line);
+    padding:20px 0;
+  }
+  .question:first-of-type{border-top:none;padding-top:0;}
+  .qnum{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:50%;background:var(--tree-light);color:var(--tree);
+    font-size:12px;font-weight:700;margin-right:8px;flex-shrink:0;
+  }
+  .qtext{font-size:14.5px;line-height:1.55;margin:0 0 13px;display:flex;align-items:flex-start;}
+  .options{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  @media (max-width:560px){ .options{grid-template-columns:repeat(2,1fr);} }
+  .opt{
+    position:relative;
+  }
+  .opt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+  .opt span{
+    display:block;text-align:center;font-size:12px;font-weight:600;
+    padding:9px 4px;border-radius:9px;border:1.5px solid var(--line);
+    color:var(--ink-soft);background:var(--soil);
+    transition:.15s;
+  }
+  .opt input:checked + span{
+    background:var(--tree);border-color:var(--tree);color:#fff;
+  }
+  .opt input:focus-visible + span{outline:2px solid var(--sapling);outline-offset:2px;}
+
+  .actions{display:flex;justify-content:space-between;gap:12px;margin-top:6px;}
+  button{
+    font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;
+    border:none;border-radius:12px;padding:13px 22px;cursor:pointer;
+    transition:transform .12s, box-shadow .12s; letter-spacing:.01em;
+  }
+  button:active{transform:translateY(1px);}
+  .btn-primary{background:var(--tree);color:#fff;box-shadow:0 6px 16px -6px rgba(45,106,79,.55);}
+  .btn-primary:hover{box-shadow:0 8px 20px -6px rgba(45,106,79,.65);}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink-soft);}
+  .btn-block{width:100%;}
+  button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
+  .warn{color:var(--coral);font-size:12.5px;margin-top:10px;display:none;}
+
+  .result-head{text-align:center;margin-bottom:6px;}
+  .stage-emoji{font-size:46px;line-height:1;margin-bottom:6px;}
+  .stage-name{font-family:'Fredoka',sans-serif;font-size:23px;font-weight:600;margin:0;}
+  .stage-sub{font-size:13.5px;color:var(--ink-soft);margin:4px 0 0;}
+
+  .gauge-wrap{display:flex;justify-content:center;margin:18px 0 8px;}
+  .score-big{text-align:center;margin:6px 0 18px;}
+  .score-big .num{font-family:'Fredoka',sans-serif;font-size:38px;font-weight:600;color:var(--tree);}
+  .score-big .max{font-size:14px;color:var(--ink-soft);}
+
+  .interp{
+    background:var(--tree-light);border-radius:13px;padding:16px 18px;
+    font-size:13.8px;line-height:1.6;color:var(--ink);margin-bottom:20px;
+  }
+  .interp b{color:var(--tree);}
+
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+  .legend .chip{
+    flex:1;min-width:120px;border-radius:11px;padding:10px 12px;border:1.5px solid var(--line);
+    font-size:11.5px;text-align:center;color:var(--ink-soft);
+  }
+  .legend .chip b{display:block;font-size:13px;color:var(--ink);margin-bottom:2px;}
+  .legend .chip.current{border-color:var(--tree);background:var(--tree-light);}
+  .legend .chip.current b{color:var(--tree);}
+
+  table.breakdown{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:6px;}
+  table.breakdown th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--ink-soft);padding:8px 6px;border-bottom:1.5px solid var(--line);
+  }
+  table.breakdown td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.breakdown td.center, table.breakdown th.center{text-align:center;}
+  table.breakdown tr:last-child td{border-bottom:none;}
+
+  .result-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  .result-actions button{flex:1;min-width:160px;}
+
+  .history-toggle{
+    text-align:center;font-size:12.5px;color:var(--ink-soft);margin:-8px 0 18px;
+  }
+  .history-toggle a{color:var(--sapling);font-weight:700;cursor:pointer;text-decoration:none;}
+  .hist-item{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:13px 0;border-top:1px solid var(--line);
+  }
+  .hist-item:first-of-type{border-top:none;}
+  .hist-name{font-weight:700;font-size:13.5px;}
+  .hist-meta{font-size:11.5px;color:var(--ink-soft);}
+  .hist-badge{
+    font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;
+    background:var(--tree-light);color:var(--tree);flex-shrink:0;
+  }
+  .hist-actions{display:flex;gap:6px;}
+  .hist-actions button{padding:7px 12px;font-size:11.5px;border-radius:8px;}
+  .empty-state{text-align:center;color:var(--ink-soft);font-size:13px;padding:30px 0;}
+
+  footer{
+    width:100%;max-width:760px;text-align:center;
+    font-size:11.5px;color:var(--ink-soft);
+    padding:18px 0 26px;margin-top:auto;
+  }
+
+  .loader{display:none;text-align:center;padding:40px 0;color:var(--ink-soft);font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app-head">
+    <div class="mark">🌱</div>
+    <div class="head-text">
+      <h1>Pemetaan Profil Pola Pikir</h1>
+      <p>Untuk murid SMA — kenali arah pertumbuhan caramu berpikir</p>
+    </div>
+  </header>
+
+  <div class="progress-row" id="progressRow">
+    <div class="seg active" id="seg1"><i></i></div>
+    <div class="seg" id="seg2"><i></i></div>
+    <div class="seg" id="seg3"><i></i></div>
+  </div>
+
+  <!-- STEP 1: IDENTITY -->
+  <div class="card" id="stepIdentity">
+    <p class="step-eyebrow">Langkah 1 dari 3</p>
+    <h2 class="step-title">Data Murid</h2>
+
+    <div class="field">
+      <label for="fName">Nama Lengkap</label>
+      <input id="fName" type="text" placeholder="Contoh: Aulia Rahma">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="fLevel">Jenjang</label>
+        <select id="fLevel">
+          <option value="">Pilih jenjang</option>
+          <option value="SMA">SMA</option>
+          <option value="SMK">SMK</option>
+          <option value="MA">MA</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fClass">Kelas</label>
+        <input id="fClass" type="text" placeholder="Contoh: X / XI / XII">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fSchool">Nama Sekolah</label>
+      <input id="fSchool" type="text" placeholder="Contoh: SMA Negeri 1 Bandung">
+    </div>
+
+    <p class="warn" id="identityWarn">Mohon lengkapi nama, jenjang, dan kelas terlebih dahulu.</p>
+
+    <div class="actions">
+      <span></span>
+      <button class="btn-primary" id="toQuestionnaire">Mulai Kuesioner →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: QUESTIONNAIRE -->
+  <div class="card" id="stepQuestionnaire" style="display:none;">
+    <p class="step-eyebrow">Langkah 2 dari 3</p>
+    <h2 class="step-title">Beri tanda pada pernyataan yang paling sesuai</h2>
+    <p class="qcount">Pilih salah satu jawaban untuk setiap pernyataan. <span id="answeredCount">0</span>/20 terjawab.</p>
+    <div id="questionList"></div>
+    <p class="warn" id="answerWarn">Masih ada pernyataan yang belum dijawab. Lengkapi semua sebelum melanjutkan.</p>
+    <div class="actions">
+      <button class="btn-ghost" id="backToIdentity">← Kembali</button>
+      <button class="btn-primary" id="toResult">Lihat Hasil →</button>
+    </div>
+  </div>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">Menghitung profil pola pikir…</div>
+
+  <!-- STEP 3: RESULT -->
+  <div class="card" id="stepResult" style="display:none;"></div>
+
+  <!-- HISTORY -->
+  <p class="history-toggle"><a id="historyLink">Lihat riwayat hasil tersimpan di perangkat ini</a></p>
+  <div class="card" id="historyCard" style="display:none;">
+    <p class="step-eyebrow">Riwayat</p>
+    <h2 class="step-title">Hasil Tersimpan</h2>
+    <div id="historyList"></div>
+  </div>
+
+</div>
+
+<footer>Copyright 2026 Siti Sundari</footer>
+
+<script>
+/* ============================ DATA ============================ */
+const STATEMENTS = [
+  {t:"Kemampuan Anda adalah sesuatu yang sangat mendasar yang tidak banyak dapat Anda ubah lagi.", scores:[0,1,2,3]},
+  {t:"Tidak peduli seberapapun tingkat kemampuan Anda saat ini, Anda bisa mengubahnya walaupun sedikit.", scores:[3,2,1,0]},
+  {t:"Anda akan selalu dapat mengubah kemampuan Anda.", scores:[3,2,1,0]},
+  {t:"Anda adalah seseorang yang unik, tidak banyak yang dapat dilakukan untuk mengubahnya.", scores:[0,1,2,3]},
+  {t:"Anda akan selalu dapat mengubah diri Anda sendiri.", scores:[3,2,1,0]},
+  {t:"Kemampuan dalam bidang seni dan musik dapat dipelajari oleh siapapun.", scores:[3,2,1,0]},
+  {t:"Hanya sedikit orang yang benar-benar mahir dalam olahraga, Anda harus membawa bakat ini sejak lahir.", scores:[0,1,2,3]},
+  {t:"Matematika lebih mudah dipelajari oleh pria atau seseorang yang berada dalam lingkungan yang menyukainya.", scores:[0,1,2,3]},
+  {t:"Makin keras Anda mengerjakan sesuatu makin mahir Anda dalam hal ini.", scores:[3,2,1,0]},
+  {t:"Tidak peduli tipe apapun Anda saat ini, Anda akan selalu dapat mengubahnya.", scores:[3,2,1,0]},
+  {t:"Mencoba sesuatu yang baru akan sangat menyulitkan Anda sehingga Anda ingin menghindarinya.", scores:[0,1,2,3]},
+  {t:"Sebagian orang baik dan pintar, sebagian lagi tidak. Tidak banyak yang dapat berubah.", scores:[0,1,2,3]},
+  {t:"Saya sangat menghargai kritik dan saran dari siapapun juga terkait dengan kinerja saya saat ini.", scores:[3,2,1,0]},
+  {t:"Saya kurang senang bila ada kritik dan saran dari orang lain.", scores:[0,1,2,3]},
+  {t:"Semua orang yang tidak memiliki hambatan kognitif memiliki kemampuan yang sama dalam belajar.", scores:[3,2,1,0]},
+  {t:"Anda bisa mempelajari sesuatu yang baru, tapi Anda tidak bisa mengubah kemampuan Anda.", scores:[0,1,2,3]},
+  {t:"Anda dapat melakukan sesuatu secara berbeda, tapi sebenarnya Anda tetap tidak dapat mengubah kemampuan Anda.", scores:[0,1,2,3]},
+  {t:"Semua orang pada dasarnya baik, tapi kadang-kadang membuat keputusan yang salah.", scores:[3,2,1,0]},
+  {t:"Alasan terpenting mengapa Anda melakukan pekerjaan Anda adalah keinginan untuk mempelajari sesuatu yang baru.", scores:[3,2,1,0]},
+  {t:"Orang yang benar-benar cerdas, tidak perlu bekerja keras.", scores:[0,1,2,3]},
+];
+const OPTION_LABELS = ["Sangat Setuju","Setuju","Tidak Setuju","Sangat Tidak Setuju"];
+const OPTION_SHORT  = ["SS","S","TS","STS"];
+
+const CATEGORIES = [
+  {code:"F",  name:"Fixed Mindset",        sub:"Pola pikir tetap",        min:0,  max:20, emoji:"🌰", color:"var(--seed)",
+   text:"Kamu cenderung percaya bahwa kemampuan adalah bawaan dan sulit berubah. Dorong dirimu untuk mencoba tantangan baru — setiap usaha kecil sebenarnya sedang membentuk kemampuanmu."},
+  {code:"FG", name:"Fixed-Growth",         sub:"Cenderung tetap, mulai terbuka", min:21, max:33, emoji:"🌱", color:"var(--sprout)",
+   text:"Kamu mulai terbuka dengan ide bahwa kemampuan bisa berkembang, namun keyakinan ini belum stabil. Latih dirimu mengingat momen ketika kerja keras benar-benar membuatmu makin mahir."},
+  {code:"GF", name:"Growth-Fixed",         sub:"Cenderung berkembang",     min:34, max:44, emoji:"🌿", color:"var(--sapling)",
+   text:"Kamu sebagian besar yakin bahwa usaha dan latihan dapat mengubah kemampuanmu. Teruskan kebiasaan ini, dan gunakan kritik atau kegagalan sebagai bahan belajar, bukan penilaian akhir."},
+  {code:"G",  name:"Growth Mindset",       sub:"Pola pikir berkembang",    min:45, max:60, emoji:"🌳", color:"var(--tree)",
+   text:"Kamu meyakini bahwa kemampuan, kecerdasan, dan dirimu sendiri selalu bisa berkembang lewat usaha. Pertahankan semangat belajar ini dan jadilah contoh bagi teman-temanmu."},
+];
+
+function getCategory(total){
+  return CATEGORIES.find(c => total >= c.min && total <= c.max) || CATEGORIES[0];
+}
+
+/* ============================ STATE ============================ */
+let identity = {name:"", level:"", cls:"", school:""};
+let answers = new Array(20).fill(null);
+
+/* ============================ STEP NAV ============================ */
+const stepIdentity = document.getElementById('stepIdentity');
+const stepQuestionnaire = document.getElementById('stepQuestionnaire');
+const stepResult = document.getElementById('stepResult');
+const loader = document.getElementById('loader');
+const seg1=document.getElementById('seg1'), seg2=document.getElementById('seg2'), seg3=document.getElementById('seg3');
+
+function showStep(n){
+  stepIdentity.style.display = n===1 ? 'block':'none';
+  stepQuestionnaire.style.display = n===2 ? 'block':'none';
+  stepResult.style.display = n===3 ? 'block':'none';
+  seg1.className='seg '+(n>1?'done':'active');
+  seg2.className='seg '+(n>2?'done':(n===2?'active':''));
+  seg3.className='seg '+(n===3?'active':'');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('toQuestionnaire').addEventListener('click', ()=>{
+  identity.name = document.getElementById('fName').value.trim();
+  identity.level = document.getElementById('fLevel').value;
+  identity.cls = document.getElementById('fClass').value.trim();
+  identity.school = document.getElementById('fSchool').value.trim();
+  const warn = document.getElementById('identityWarn');
+  if(!identity.name || !identity.level || !identity.cls){
+    warn.style.display='block';
+    return;
+  }
+  warn.style.display='none';
+  renderQuestionnaire();
+  showStep(2);
+});
+
+document.getElementById('backToIdentity').addEventListener('click', ()=> showStep(1));
+
+function renderQuestionnaire(){
+  const list = document.getElementById('questionList');
+  list.innerHTML = STATEMENTS.map((q,i)=>`
+    <div class="question">
+      <p class="qtext"><span class="qnum">${i+1}</span><span>${q.t}</span></p>
+      <div class="options">
+        ${OPTION_LABELS.map((label,oi)=>`
+          <label class="opt">
+            <input type="radio" name="q${i}" value="${oi}" ${answers[i]===oi?'checked':''}>
+            <span>${label}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('input[type=radio]').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      const qi = parseInt(e.target.name.replace('q',''));
+      answers[qi] = parseInt(e.target.value);
+      updateAnsweredCount();
+    });
+  });
+  updateAnsweredCount();
+}
+
+function updateAnsweredCount(){
+  const c = answers.filter(a=>a!==null).length;
+  document.getElementById('answeredCount').textContent = c;
+}
+
+document.getElementById('toResult').addEventListener('click', ()=>{
+  const warn = document.getElementById('answerWarn');
+  if(answers.some(a=>a===null)){
+    warn.style.display='block';
+    const firstUnanswered = answers.findIndex(a=>a===null);
+    const q = document.querySelectorAll('.question')[firstUnanswered];
+    q.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  warn.style.display='none';
+  stepQuestionnaire.style.display='none';
+  loader.style.display='block';
+  setTimeout(()=>{
+    loader.style.display='none';
+    const result = computeResult();
+    renderResult(result);
+    saveToHistory(result);
+    showStep(3);
+  }, 550);
+});
+
+/* ============================ SCORING ============================ */
+function computeResult(){
+  const rows = STATEMENTS.map((q,i)=>({
+    no:i+1, text:q.t, choice:answers[i], label:OPTION_LABELS[answers[i]],
+    short:OPTION_SHORT[answers[i]], points:q.scores[answers[i]]
+  }));
+  const total = rows.reduce((s,r)=>s+r.points,0);
+  const category = getCategory(total);
+  return {
+    identity:{...identity},
+    rows, total, category,
+    date: new Date().toISOString()
+  };
+}
+
+/* ============================ RENDER RESULT ============================ */
+function gaugeSVG(total, categoryCode){
+  const bands = [
+    {from:0,to:20,color:'var(--seed)'},
+    {from:21,to:33,color:'var(--sprout)'},
+    {from:34,to:44,color:'var(--sapling)'},
+    {from:45,to:60,color:'var(--tree)'},
+  ];
+  const cx=140, cy=130, r=110;
+  function angleFor(v){ return Math.PI - (v/60)*Math.PI; }
+  function pt(v, rad){ const a=angleFor(v); return [cx+rad*Math.cos(a), cy-rad*Math.sin(a)]; }
+  let arcs = bands.map(b=>{
+    const [x1,y1]=pt(b.from, r), [x2,y2]=pt(b.to, r);
+    return `<path d="M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}" stroke="${b.color}" stroke-width="16" fill="none" stroke-linecap="butt"/>`;
+  }).join('');
+  const needleAngle = angleFor(Math.min(Math.max(total,0),60));
+  const nx = cx + (r-22)*Math.cos(needleAngle);
+  const ny = cy - (r-22)*Math.sin(needleAngle);
+  return `
+  <svg viewBox="0 0 280 150" width="260" height="150" xmlns="http://www.w3.org/2000/svg">
+    ${arcs}
+    <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="7" fill="var(--ink)"/>
+    <text x="${cx}" y="${cy+34}" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="13" fill="var(--ink-soft)">0</text>
+    <text x="20" y="${cy+5}" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="11" fill="var(--ink-soft)">0</text>
+    <text x="260" y="${cy+5}" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="11" fill="var(--ink-soft)">60</text>
+  </svg>`;
+}
+
+function renderResult(result){
+  const {identity:idn, rows, total, category} = result;
+  const card = stepResult;
+  card.innerHTML = `
+    <p class="step-eyebrow">Langkah 3 dari 3 — Hasil</p>
+    <div class="result-head">
+      <div class="stage-emoji">${category.emoji}</div>
+      <h2 class="stage-name" style="color:${category.color}">${category.name}</h2>
+      <p class="stage-sub">${idn.name} · ${idn.level} Kelas ${idn.cls}${idn.school? ' · '+idn.school:''}</p>
+    </div>
+
+    <div class="gauge-wrap">${gaugeSVG(total, category.code)}</div>
+    <div class="score-big"><span class="num">${total}</span><span class="max"> / 60</span></div>
+
+    <div class="interp"><b>${category.name} (${category.code}):</b> ${category.text}</div>
+
+    <div class="legend">
+      ${CATEGORIES.map(c=>`
+        <div class="chip ${c.code===category.code?'current':''}">
+          <b>${c.code}</b>${c.min}–${c.max}
+        </div>`).join('')}
+    </div>
+
+    <table class="breakdown">
+      <thead><tr><th>No</th><th>Pernyataan</th><th class="center">Jawaban</th><th class="center">Skor</th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`
+          <tr>
+            <td>${r.no}</td>
+            <td>${r.text}</td>
+            <td class="center">${r.short}</td>
+            <td class="center">${r.points}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="result-actions">
+      <button class="btn-primary" id="downloadPdfBtn">⬇ Unduh PDF</button>
+      <button class="btn-ghost" id="retakeBtn">Isi Ulang Kuesioner</button>
+    </div>
+  `;
+  document.getElementById('downloadPdfBtn').addEventListener('click', ()=> downloadPDF(result));
+  document.getElementById('retakeBtn').addEventListener('click', ()=>{
+    answers = new Array(20).fill(null);
+    document.getElementById('fName').value='';
+    document.getElementById('fLevel').value='';
+    document.getElementById('fClass').value='';
+    document.getElementById('fSchool').value='';
+    showStep(1);
+  });
+}
+
+/* ============================ PDF EXPORT ============================ */
+function downloadPDF(result){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 48;
+  let y = 56;
+
+  function footerStamp(){
+    const pageH = doc.internal.pageSize.getHeight();
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(140,134,118);
+    doc.text('Copyright 2026 Siti Sundari', pageW/2, pageH-24, {align:'center'});
+  }
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(16);
+  doc.setTextColor(43,36,24);
+  doc.text('Pemetaan Profil Pola Pikir', margin, y);
+  y += 18;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(107,99,84);
+  doc.text('Laporan hasil kuesioner pola pikir murid SMA', margin, y);
+  y += 26;
+
+  doc.setDrawColor(228,218,196);
+  doc.line(margin, y, pageW-margin, y);
+  y += 22;
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(43,36,24);
+  doc.text('Data Murid', margin, y);
+  y += 18;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10.5);
+  const idn = result.identity;
+  const idLines = [
+    ['Nama', idn.name],
+    ['Jenjang', idn.level],
+    ['Kelas', idn.cls],
+    ['Sekolah', idn.school || '-'],
+    ['Tanggal', new Date(result.date).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})]
+  ];
+  idLines.forEach(([k,v])=>{
+    doc.setTextColor(107,99,84); doc.text(k+':', margin, y);
+    doc.setTextColor(43,36,24); doc.text(String(v), margin+90, y);
+    y += 16;
+  });
+  y += 10;
+
+  doc.setDrawColor(228,218,196);
+  doc.line(margin, y, pageW-margin, y);
+  y += 26;
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text('Hasil: ' + result.category.name + ' (' + result.category.code + ')', margin, y);
+  y += 18;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10.5);
+  doc.text('Grand Total Skor: ' + result.total + ' / 60', margin, y);
+  y += 18;
+  const interpLines = doc.splitTextToSize(result.category.text, pageW - margin*2);
+  doc.text(interpLines, margin, y);
+  y += interpLines.length*13 + 10;
+
+  doc.setFont('helvetica','italic');
+  doc.setFontSize(9);
+  doc.setTextColor(107,99,84);
+  doc.text('Kategori — F: 0-20  |  FG: 21-33  |  GF: 34-44  |  G: 45-60', margin, y);
+  y += 24;
+
+  doc.setDrawColor(228,218,196);
+  doc.line(margin, y, pageW-margin, y);
+  y += 22;
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(43,36,24);
+  doc.text('Rincian Jawaban', margin, y);
+  y += 16;
+
+  const colNo = margin;
+  const colText = margin + 22;
+  const colAns = pageW - margin - 70;
+  const colScore = pageW - margin - 22;
+  const textWidth = colAns - colText - 10;
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(107,99,84);
+  doc.text('No', colNo, y);
+  doc.text('Pernyataan', colText, y);
+  doc.text('Jawaban', colAns, y);
+  doc.text('Skor', colScore, y);
+  y += 6;
+  doc.setDrawColor(228,218,196);
+  doc.line(margin, y, pageW-margin, y);
+  y += 14;
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  result.rows.forEach(r=>{
+    const lines = doc.splitTextToSize(r.no + '. ' + r.text, textWidth);
+    const blockH = Math.max(lines.length*11, 12);
+    if(y + blockH > doc.internal.pageSize.getHeight()-50){
+      footerStamp();
+      doc.addPage();
+      y = 56;
+    }
+    doc.setTextColor(43,36,24);
+    doc.text(lines, colText-22, y);
+    doc.text(r.short, colAns, y);
+    doc.text(String(r.points), colScore, y);
+    y += blockH + 6;
+  });
+
+  footerStamp();
+  const fname = 'Profil-Pola-Pikir-' + (idn.name||'murid').replace(/\s+/g,'_') + '.pdf';
+  doc.save(fname);
+}
+
+/* ============================ HISTORY (window.storage) ============================ */
+async function saveToHistory(result){
+  try{
+    const key = 'pp_result:' + Date.now();
+    await window.storage.set(key, JSON.stringify(result), false);
+  }catch(e){ console.error('Gagal menyimpan riwayat', e); }
+}
+
+async function loadHistory(){
+  const container = document.getElementById('historyList');
+  container.innerHTML = '<p class="empty-state">Memuat riwayat…</p>';
+  try{
+    const listRes = await window.storage.list('pp_result:', false);
+    const keys = (listRes && listRes.keys) ? listRes.keys : [];
+    if(keys.length===0){
+      container.innerHTML = '<p class="empty-state">Belum ada hasil tersimpan di perangkat ini.</p>';
+      return;
+    }
+    const items = [];
+    for(const k of keys){
+      try{
+        const r = await window.storage.get(k, false);
+        if(r && r.value) items.push({key:k, data:JSON.parse(r.value)});
+      }catch(e){}
+    }
+    items.sort((a,b)=> new Date(b.data.date) - new Date(a.data.date));
+    container.innerHTML = items.map(it=>{
+      const d = it.data;
+      return `<div class="hist-item">
+        <div>
+          <div class="hist-name">${d.identity.name}</div>
+          <div class="hist-meta">${d.identity.level} Kelas ${d.identity.cls} · ${new Date(d.date).toLocaleDateString('id-ID')}</div>
+        </div>
+        <span class="hist-badge">${d.category.code} · ${d.total}/60</span>
+        <div class="hist-actions">
+          <button class="btn-ghost" data-key="${it.key}">PDF</button>
+        </div>
+      </div>`;
+    }).join('');
+    container.querySelectorAll('.hist-actions button').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        const k = e.target.getAttribute('data-key');
+        const r = await window.storage.get(k, false);
+        downloadPDF(JSON.parse(r.value));
+      });
+    });
+  }catch(e){
+    container.innerHTML = '<p class="empty-state">Riwayat tidak tersedia.</p>';
+  }
+}
+
+const historyCard = document.getElementById('historyCard');
+let historyOpen = false;
+document.getElementById('historyLink').addEventListener('click', ()=>{
+  historyOpen = !historyOpen;
+  historyCard.style.display = historyOpen ? 'block':'none';
+  if(historyOpen) loadHistory();
+});
+
+showStep(1);
+</script>
+</body>
+</html>
